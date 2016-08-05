@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package testmath;
+
+message OperationRequest {
+  int32 a = 1;
+  int32 b = 2;
+}
+
+message OperationReply {
+  int32 result = 1;
+}

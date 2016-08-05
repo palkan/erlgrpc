@@ -1,0 +1,18 @@
+{"1.1.0",
+[{<<"chatterbox">>,
+  {git,"git@github.com:joedevivo/chatterbox.git",
+       {ref,"c56e77d3965711e4a9546a860e9ab8fb45f9f5aa"}},
+  0},
+ {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.8">>},1},
+ {<<"hpack">>,
+  {git,"git://github.com/joedevivo/hpack.git",
+       {ref,"2880ff4e88df18a31728893afc6746dcab1acf79"}},
+  1},
+ {<<"lager">>,{pkg,<<"lager">>,<<"3.2.1">>},0},
+ {<<"ulitos">>,{pkg,<<"ulitos">>,<<"0.3.0">>},0}]}.
+[
+{pkg_hash,[
+ {<<"goldrush">>, <<"2024BA375CEEA47E27EA70E14D2C483B2D8610101B4E852EF7F89163CDB6E649">>},
+ {<<"lager">>, <<"EEF4E18B39E4195D37606D9088EA05BF1B745986CF8EC84F01D332456FE88D17">>},
+ {<<"ulitos">>, <<"B22D60F72A0627F5BBCA2A42A8A140467B954EF950E4716E3BD0E42ABF135102">>}]}
+].

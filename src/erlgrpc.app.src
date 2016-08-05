@@ -1,0 +1,13 @@
+{application, erlgrpc,
+ [
+  {description, ""},
+  {vsn, "0.0.1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  lager
+                 ]},
+  {mod, { erlgrpc_app, []}},
+  {env, []}
+ ]}.
