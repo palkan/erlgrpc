@@ -5,6 +5,9 @@
 -include_lib("erlgrpc/include/priv.hrl").
 -define(SERVER, ?MODULE).
 
+%% Each response contain Compressed flag (1 byte) and Size info (4 bytes)
+-define(RESPONSE_HEADER_SIZE, 40).
+
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
@@ -23,7 +26,9 @@
 %% ------------------------------------------------------------------
 
 -record(state, {
-  client ::pid()
+  client ::pid(),
+  stream_id,
+  caller
 }).
 
 %% ------------------------------------------------------------------
@@ -47,28 +52,25 @@ init(#{ host := Host }) ->
 init(_) ->
   init(#{ host => "localhost", port => 50051}).
 
-handle_call({invoke, Method, Data}, _From, #state{client = Client} = State) ->
+handle_call({invoke, Method, Data}, From, #state{client = Client} = State) ->
   RequestHeaders = [
     {<<":method">>, <<"POST">>},
-    {<<":path">>, Method},
     {<<":scheme">>, <<"http">>},
+    {<<":path">>, Method},
     {<<":authority">>, <<"localhost">>},
-    {<<"grpc-timeout">>, <<"5S">>},
-    {<<"content-type">>, <<"application/grpc+proto">>},
-    {<<"grpc-encoding">>, <<"identity">>},
-    {<<"grpc-accept-encoding">>, <<"identity">>},
-    {<<"grpc-message-type">>, <<"/anycable.RPC/ConnectionRequest">>},
-    {<<"user-agent">>, <<"chatterbox-client/0.0.1">>}
+    {<<"content-type">>, <<"application/grpc">>},
+    {<<"user-agent">>, <<"chatterbox-client/0.0.1">>},
+    {<<"te">>, <<"trailers">>}
   ],
 
   Size = size(Data),
   Compressed = 0,
-  RequestBody = <<Compressed:32, Size:32, Data/binary>>,
+  RequestBody = <<Compressed:8, Size:32, Data/binary>>,
 
   ?D({request, RequestHeaders, RequestBody}),
 
-  Res = h2_client:sync_request(Client, RequestHeaders, RequestBody),
-  {reply, Res, State};
+  {ok, StreamId} = h2_client:send_request(Client, RequestHeaders, RequestBody),
+  {noreply, State#state{stream_id = StreamId, caller = From}};
 
 handle_call(_Request, _From, State) ->
   {reply, unknown, State}.
@@ -76,7 +78,14 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-handle_info(_Info, State) ->
+handle_info({'END_STREAM', StreamId}, #state{stream_id = StreamId, caller = Caller, client = Client} = State) ->
+  {ok, {ResponseHeaders, ResponseBody}} = h2_client:get_response(Client, StreamId),
+  Status = proplists:get_value(<<"grpc-status">>, ResponseHeaders),
+  gen_server:reply(Caller, parse_response(Status, ResponseBody, ResponseHeaders)),
+  {noreply, State#state{stream_id = undefined, caller = undefined}};
+
+handle_info(Info, State) ->
+  ?D({unknown, Info}),
   {noreply, State}.
 
 terminate(_Reason, _State) ->
@@ -88,3 +97,12 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+
+-spec parse_response(Status::binary(), Data::list(binary()), Headers::list()) -> {ok, Res::binary() | nodata} | {error, Reason::binary()}.
+parse_response(<<"0">>, [], _) -> {ok, nodata};
+
+parse_response(<<"0">>, [<<_:?RESPONSE_HEADER_SIZE, Data/binary>>], _) ->
+  {ok, Data};
+
+parse_response(_Status, _, Headers) ->
+  {error, proplists:get_value(<<"grpc-message">>, Headers)}.

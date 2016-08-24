@@ -4,7 +4,6 @@
 -include_lib("erlgrpc/include/erlgrpc.hrl").
 -include_lib("erlgrpc/include/log.hrl").
 -include_lib("erlgrpc/include/priv.hrl").
--include_lib("erlgrpc/include/rpc_pb.hrl").
 -define(APPS, [lager]).
 
 %% ------------------------------------------------------------------

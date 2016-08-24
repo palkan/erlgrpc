@@ -20,12 +20,12 @@ type Remote struct {
 
 var rpc = Remote {}
 
-func (rpc *Remote) Init(host string) {
+func (rpc *Remote) Init(host string, initCount int) {
   factory := func() (*grpc.ClientConn, error) { 
     return grpc.Dial(host, grpc.WithInsecure())
   }
 
-  p, err := pool.NewChannelPool(10, 50, factory)
+  p, err := pool.NewChannelPool(initCount, 50, factory)
     
   if err != nil {
     log.Fatalf("failed to create pool: %v", err)
@@ -129,7 +129,7 @@ func main() {
   simple := flag.Bool("simple", false, "invoke simple call")
   flag.Parse()
 
-  rpc.Init(*rpchost)
+  rpc.Init(*rpchost, *count)
   defer rpc.Close()
 
   if *simple {

@@ -6,21 +6,25 @@ require 'rpc_services'
 
 # Set GRPC logger
 module GRPC
-  # def self.logger
-  #   @logger ||= ::Logger.new(STDOUT)
-  # end
+  def self.logger
+    @logger ||= ::Logger.new(STDOUT)
+  end
 end
 
 module Testmath
   class Handler < Testmath::Calculator::Service # :nodoc:
     def add(request, _unused_call)
       do_sleep
-      Testmath::OperationReply.new(result: request.a + request.b)
+      reply = Testmath::OperationReply.new(result: request.a + request.b)
+      GRPC.logger.info "Sending reply for Add: #{reply.result}"
+      reply
     end
 
     def multiply(request, _unused_call)
       do_sleep
-      Testmath::OperationReply.new(result: request.a * request.b)
+      reply = Testmath::OperationReply.new(result: request.a * request.b)
+      GRPC.logger.info "Sending reply for Multiply: #{reply.result}"
+      reply
     end
 
     private

@@ -41,5 +41,7 @@ groups() ->
 
 simple_test(Config) ->
   Pid = ?config(server, Config),
-  Res = erlgrpc:invoke(Pid, <<"/testmath.Calculator/add">>, math_pb:encode_msg(#'OperationRequest'{ a = 2, b = 3})),
-  ct:print("Res ~p", [Res]).
+  {ok, Res} = erlgrpc:invoke(Pid, <<"/testmath.Calculator/Add">>, math_pb:encode_msg(#'OperationRequest'{ a = 2, b = 3})),
+  ct:print("Res: ~p", [Res]),
+  Decoded = math_pb:decode_msg(Res, 'OperationReply'),
+  5 = Decoded#'OperationReply'.result.
