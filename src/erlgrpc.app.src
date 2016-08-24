@@ -3,6 +3,9 @@
   {description, ""},
   {vsn, "0.0.1"},
   {registered, []},
+  {licenses, ["MIT"]},
+  {links, [{"Github", "https://github.com/palkan/erlgrpc"}]},
+  {maintainers, ["Vlad Dem"]},
   {applications, [
                   kernel,
                   stdlib,
