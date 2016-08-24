@@ -1,7 +1,12 @@
 sudo: false
 language: erlang
 otp_release:
-  - 18.0
+  - 18.3
 services:
   - redis-server
-script: "rebar compile && rebar eunit skip_deps=true && rebar ct skip_deps=true"
+before_install:
+  - wget https://s3.amazonaws.com/rebar3/rebar3 
+  - chmod +x rebar3
+before_script:
+  - ruby files/rubyrpc/server.rb && sleep 2 &
+script: "./rebar3 eunit && ./rebar3 ct"
