@@ -21,14 +21,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
-%% ------------------------------------------------------------------
-%% API Function Exports
-%% ------------------------------------------------------------------
-
 -record(state, {
   client ::pid(),
-  stream_id,
-  caller
+  calls = #{} ::map()
 }).
 
 %% ------------------------------------------------------------------
@@ -52,7 +47,7 @@ init(#{ host := Host }) ->
 init(_) ->
   init(#{ host => "localhost", port => 50051}).
 
-handle_call({invoke, Method, Data}, From, #state{client = Client} = State) ->
+handle_call({invoke, Method, Data}, From, #state{client = Client, calls = Calls} = State) ->
   RequestHeaders = [
     {<<":method">>, <<"POST">>},
     {<<":scheme">>, <<"http">>},
@@ -70,7 +65,7 @@ handle_call({invoke, Method, Data}, From, #state{client = Client} = State) ->
   ?D({request, RequestHeaders, RequestBody}),
 
   {ok, StreamId} = h2_client:send_request(Client, RequestHeaders, RequestBody),
-  {noreply, State#state{stream_id = StreamId, caller = From}};
+  {noreply, State#state{calls=Calls#{ StreamId => From }}};
 
 handle_call(_Request, _From, State) ->
   {reply, unknown, State}.
@@ -78,11 +73,15 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-handle_info({'END_STREAM', StreamId}, #state{stream_id = StreamId, caller = Caller, client = Client} = State) ->
-  {ok, {ResponseHeaders, ResponseBody}} = h2_client:get_response(Client, StreamId),
-  Status = proplists:get_value(<<"grpc-status">>, ResponseHeaders),
-  gen_server:reply(Caller, parse_response(Status, ResponseBody, ResponseHeaders)),
-  {noreply, State#state{stream_id = undefined, caller = undefined}};
+handle_info({'END_STREAM', StreamId}, #state{calls = Calls, client = Client} = State) ->
+  case maps:get(StreamId, Calls, undefined) of
+    undefined -> ?E({unknown_stream, StreamId});
+    From ->
+      {ok, {ResponseHeaders, ResponseBody}} = h2_client:get_response(Client, StreamId),
+      Status = proplists:get_value(<<"grpc-status">>, ResponseHeaders),
+      gen_server:reply(From, parse_response(Status, ResponseBody, ResponseHeaders))
+  end,
+  {noreply, State#state{calls=maps:remove(StreamId, Calls)}};
 
 handle_info(Info, State) ->
   ?D({unknown, Info}),

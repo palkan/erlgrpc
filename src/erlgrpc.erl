@@ -26,8 +26,8 @@ stop() ->
   application:stop(erlgrpc).
 
 upgrade() ->
- ulitos_app:reload(erlgrpc),
- ok.
+  ulitos_app:reload(erlgrpc),
+  ok.
  
 ping() ->
   pong.
@@ -46,4 +46,4 @@ dial(Options) ->
 %% @end
 -spec invoke(ClientPid::pid(), Method::string(), In::binary()) -> {ok, Out::binary()} | {error, Reason::string()}.
 invoke(ClientPid, Method, In) ->
-  gen_server:call(ClientPid, {invoke, Method, In}, infinity).
+  gen_server:call(ClientPid, {invoke, Method, In}).

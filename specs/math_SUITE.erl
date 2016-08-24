@@ -32,16 +32,25 @@ all() ->
 groups() ->
   [
     {
-      simple_tests, [sequence], 
+      simple_tests, [shuffle, parallel, {repeat, to_int(os:getenv("N", 5))}],
       [
-        simple_test
+        simple_test,
+        simple_test_2
       ]
     }
   ].
 
 simple_test(Config) ->
   Pid = ?config(server, Config),
-  {ok, Res} = erlgrpc:invoke(Pid, <<"/testmath.Calculator/Add">>, math_pb:encode_msg(#'OperationRequest'{ a = 2, b = 3})),
-  ct:print("Res: ~p", [Res]),
-  Decoded = math_pb:decode_msg(Res, 'OperationReply'),
-  5 = Decoded#'OperationReply'.result.
+  {ok, Res} = math_service:add(Pid, 2, 3),
+  5 = Res#'OperationReply'.result.
+
+simple_test_2(Config) ->
+  Pid = ?config(server, Config),
+  {ok, Res} = math_service:multiply(Pid, 2, 3),
+  6 = Res#'OperationReply'.result.
+
+to_int(L) when is_list(L) ->
+  list_to_integer(L);
+
+to_int(N) -> N.
