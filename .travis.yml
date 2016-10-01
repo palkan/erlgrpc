@@ -5,8 +5,9 @@ otp_release:
 services:
   - redis-server
 before_install:
+  - rvm use 2.2.2 --install --binary --fuzzy
+  - gem install grpc
   - wget https://s3.amazonaws.com/rebar3/rebar3 
   - chmod +x rebar3
-before_script:
-  - ruby files/rubyrpc/server.rb && sleep 2 &
+install: []
 script: "./rebar3 eunit && ./rebar3 ct"

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/palkan/erlgrpc.svg?branch=master)](https://travis-ci.org/palkan/erlgrpc)
+
 Erlang GRPC
 =====
 
@@ -7,15 +9,10 @@ See [specs](tree/master/specs) for working examples.
 
 ## How to run specs
 
-We use Ruby GRPC server for testing our client.
+We use Ruby GRPC server for testing our client (it is launched automatically when running Common Test specs).
+Required Ruby version: >= 2.2.
 
 ```shell
-# run ruby server
-ruby files/rubyrpc/server.rb
-
-# compile project
-rebar3 compile
-
 # run specs
 rebar3 ct
 ```
