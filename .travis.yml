@@ -8,5 +8,6 @@ before_install:
   - wget https://s3.amazonaws.com/rebar3/rebar3 
   - chmod +x rebar3
 before_script:
-  - ruby files/rubyrpc/server.rb && sleep 2 &
+  - ruby files/rubyrpc/server.rb &
+  - sleep 3
 script: "./rebar3 eunit && ./rebar3 ct"
