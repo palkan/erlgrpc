@@ -87,7 +87,7 @@ handle_info(Info, State) ->
   ?D({unknown, Info}),
   {noreply, State}.
 
-terminate(_Reason, #state{client = Pid} = State) ->
+terminate(_Reason, #state{client = Pid}) ->
   h2_client:stop(Pid),
   ok.
 
