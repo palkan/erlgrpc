@@ -7,11 +7,18 @@
 
 -compile(export_all).
 
-init_per_suite(Config) ->
-  lager:start(),
-  Config.
+-define(RUBY_PATH, filename:join([element(2, file:get_cwd()), "../../..", "files", "rubyrpc"])).
 
-end_per_suite(_) ->
+init_per_suite(Config) ->
+  exec:start(),
+  lager:start(),
+  {ok, _, I} = exec:run("ruby server.rb > ruby.log 2>&1", [{cd, ?RUBY_PATH}]),
+  timer:sleep(2000),
+  [{ruby, I} | Config].
+
+end_per_suite(Config) ->
+  Ruby = ?config(ruby, Config),
+  exec:stop(Ruby),
   application:stop(lager),
   ok.
 

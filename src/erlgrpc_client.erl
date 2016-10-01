@@ -87,7 +87,8 @@ handle_info(Info, State) ->
   ?D({unknown, Info}),
   {noreply, State}.
 
-terminate(_Reason, _State) ->
+terminate(_Reason, #state{client = Pid} = State) ->
+  h2_client:stop(Pid),
   ok.
 
 code_change(_OldVsn, State, _Extra) ->

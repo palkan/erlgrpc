@@ -10,7 +10,7 @@
 %% Common Application Function Exports
 %% ------------------------------------------------------------------
 
--export([start/0, dial/1, stop/0, upgrade/0, ping/0, invoke/3]).
+-export([start/0, dial/1, close/1, stop/0, upgrade/0, ping/0, invoke/3]).
 
 %% ------------------------------------------------------------------
 %% API Function Exports
@@ -40,6 +40,13 @@ ping() ->
 -spec dial(Options::map()) -> {ok, Pid::pid()}.
 dial(Options) ->
   erlgrpc_sup:start_client(Options).
+
+%% @doc
+%% Close connection.
+%% @end
+-spec close(Pid::pid()) -> ok.
+close(Pid) ->
+  erlgrpc_sup:stop_client(Pid).
 
 %% @doc
 %% Invoke RPC method and return response or error.
