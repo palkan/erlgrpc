@@ -23,7 +23,10 @@
 
 -record(state, {
   client ::pid(),
-  calls = #{} ::map()
+  host,
+  port,
+  calls = #{} ::map(),
+  connected = false ::boolean()
 }).
 
 %% ------------------------------------------------------------------
@@ -38,14 +41,22 @@ start_link(Options) ->
 %% ------------------------------------------------------------------
 
 init(#{ host := Host, port := Port }) ->
-  {ok, Pid} = h2_client:start_link(http, Host, Port),
-  {ok, #state{client = Pid}};
+  {ok, #state{host = Host, port = Port}};
  
 init(#{ host := Host }) ->
   init(#{ host => Host, port => 50051});
 
 init(_) ->
   init(#{ host => "localhost", port => 50051}).
+
+handle_call(Call, From, #state{host = Host, port = Port, connected=false} = State) ->
+  case h2_client:start_link(http, Host, Port) of
+    {ok, Pid} -> handle_call(Call, From, State#state{client = Pid, connected=true});
+    _ ->
+      %% we'll try to reconnect later
+      ?E({connection_failed}),
+      {reply, {error, no_connection}, State#state{host = Host, port = Port}}
+  end;
 
 handle_call({invoke, Method, Data}, From, #state{client = Client, calls = Calls} = State) ->
   RequestHeaders = [
@@ -87,8 +98,11 @@ handle_info(Info, State) ->
   ?D({unknown, Info}),
   {noreply, State}.
 
-terminate(_Reason, #state{client = Pid}) ->
+terminate(_Reason, #state{client = Pid, connected=true}) ->
   h2_client:stop(Pid),
+  ok;
+
+terminate(_Reason, _State) ->
   ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -97,7 +111,6 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
-
 -spec parse_response(Status::binary(), Data::list(binary()), Headers::list()) -> {ok, Res::binary() | nodata} | {error, Reason::binary()}.
 parse_response(<<"0">>, [], _) -> {ok, nodata};
 
