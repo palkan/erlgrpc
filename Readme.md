@@ -3,9 +3,9 @@
 Erlang GRPC
 =====
 
-It's a the very-very-very first attempt to create Erlang [grpc](grpc.io) client.
+It's a the very-very-very first attempt to create Erlang [grpc](http://grpc.io) client.
 
-See [specs](tree/master/specs) for working examples.
+See [specs](/specs) for working examples.
 
 ## How to run specs
 
