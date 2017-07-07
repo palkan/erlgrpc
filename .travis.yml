@@ -1,13 +1,32 @@
 sudo: false
 language: erlang
-otp_release:
-  - 18.3
+notifications:
+  email: false
 services:
   - redis-server
 before_install:
-  - rvm use 2.2.2 --install --binary --fuzzy
-  - gem install grpc
+  - rvm use $RUBYV --install --binary --fuzzy
+  - gem install grpc -v $GRPCV
   - wget https://s3.amazonaws.com/rebar3/rebar3 
   - chmod +x rebar3
 install: []
 script: "./rebar3 eunit && ./rebar3 ct"
+
+matrix:
+  include:
+    - otp_release: 18.3
+      env: 
+        - RUBYV=2.2.2
+        - GRPCV=1.0.1
+    - otp_release: 19.2
+      env: 
+        - RUBYV=2.3.3
+        - GRPCV=1.2.5
+    - otp_release: 19.3
+      env: 
+        - RUBYV=2.4.1
+        - GRPCV=1.3.4
+    - otp_release: 20.0
+      env:
+        - RUBYV=2.4.1
+        - GRPCV=1.4.1
