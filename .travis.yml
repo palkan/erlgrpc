@@ -1,11 +1,12 @@
 sudo: false
 language: erlang
 otp_release:
-  - 18.3
+  - 19.3
+  - 20.0
 services:
   - redis-server
 before_install:
-  - rvm use 2.2.2 --install --binary --fuzzy
+  - rvm use 2.4.2 --install --binary --fuzzy
   - gem install grpc
   - wget https://s3.amazonaws.com/rebar3/rebar3 
   - chmod +x rebar3
